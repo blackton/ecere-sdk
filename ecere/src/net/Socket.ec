@@ -779,27 +779,8 @@ private:
       fd_set rs, ws, es;
       int selectResult;
       Mutex mutex;
-      bool deleteMutex = false;
-      bool leftOver;
 
-      mutex = this.mutex;
-      mutex.Wait();
-      incref this;
-
-      leftOver = this.leftOver;
-      if(disconnectCode > 0 && !leftOver)
-      {
-         if(_refCount == 1)
-         {
-            deleteMutex = true;
-            this.mutex = null;
-         }
-         delete this;
-         mutex.Release();
-         if(deleteMutex)
-            delete mutex;
-         return false;
-      }
+      if(disconnectCode > 0 && !leftOver) return false;
       FD_ZERO(&rs);
       FD_ZERO(&ws);
       FD_ZERO(&es);
@@ -807,6 +788,9 @@ private:
       //FD_SET(s, &ws);
       FD_SET(s, &es);
 
+      mutex = this.mutex;
+      mutex.Wait();
+      incref this;
       mutex.Release();
       selectResult = select((int)(s+1), &rs, &ws, &es, leftOver ? &tv : (timeOut ? &tvTO : null));
 
@@ -815,15 +799,8 @@ private:
          gotEvent |= ProcessSocket(&rs, &ws, &es);
       }
       mutex.Wait();
-      if(_refCount == 1)
-      {
-         deleteMutex = true;
-         this.mutex = null;
-      }
       delete this;
       mutex.Release();
-      if(deleteMutex)
-         delete mutex;
       return gotEvent;
    }
 
