@@ -804,8 +804,7 @@ public:
             for(child = children.first; child; child = child.next)
             {
                Object result = child.Find(name);
-               if(result)
-                  return result;
+               if(result) return result;
             }
          }
       }
@@ -868,6 +867,25 @@ public:
          object.parent = this;
          object.flags.transform = true;
          object.flags.root = false;
+      }
+   }
+
+   void Remove(Object child)
+   {
+      if(this && child && child.parent == this)
+      {
+         children.Remove(child);
+         child.parent = null;
+      }
+   }
+
+   void Delete(Object child, DisplaySystem displaySystem)
+   {
+      if(this)
+      {
+         children.Remove(child);
+         child.Free(displaySystem);
+         delete child;
       }
    }
 
